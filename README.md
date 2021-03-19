@@ -26,7 +26,7 @@ go mod download
 将.env.example修改为.env文件,并修改其相关信息
 </li>
 <li>启动相关服务<br>
-go run trail_didi_3/server/main.go(启动服务端，开启监听)<br
+go run trail_didi_3/server/main.go(启动服务端，开启监听)<br>
 go run trail_didi_3/driver_client/main.go(启动司机端，开始接单)<br>
 go run trail_didi_3/user_client/main.go(启动乘客端，开始下单)<br>
 </li>
