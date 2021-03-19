@@ -119,12 +119,6 @@ type DriverPushUserIsOrder struct { //司机向乘客推送接单成功信息
 	User
 }
 
-type User struct {
-	UserId     int    `json:"userId"`
-	UserPwd    string `json:"userPwd"`
-	UserName   string `json:"userName"`
-	UserStatus bool   `json:"userStatus"` // 在线就是true
-}
 type MesType string
 
 // 定义消息类型
@@ -173,6 +167,13 @@ type DialogOtherUserMes struct {
 type DialogOrderInfoMes struct {
 	User
 	Order
+}
+
+type User struct {
+	UserId     int    `json:"userId"`
+	UserPwd    string `json:"userPwd"`
+	UserName   string `json:"userName"`
+	UserStatus bool   `json:"userStatus"` // 在线就是true
 }
 
 type Order struct {

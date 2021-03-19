@@ -6,7 +6,7 @@ import (
 	"net"
 	"trail_didi_3/config"
 	config2 "trail_didi_3/pkg/config"
-	"trail_didi_3/server/Sprocess"
+	"trail_didi_3/server/server_process"
 )
 
 func creatProcessor(conn net.Conn) {

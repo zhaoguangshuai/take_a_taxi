@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"trail_didi_3/config"
-	Cprocess "trail_didi_3/driver_client/CProcess"
+	Cprocess "trail_didi_3/driver_client/driver_process"
 )
 
 func init() {
