@@ -1,0 +1,5 @@
+.idea
+.DS_Store
+./driver_client/.env
+./server/.env
+./user_client/.env
