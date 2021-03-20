@@ -2,16 +2,17 @@ package Sprocess
 
 import (
 	"fmt"
+	"golang.org/x/crypto/bcrypt"
 	"net"
-	"trail_didi_3/pkg/helper"
+	"trail_didi_3/models/driver"
 	"trail_didi_3/pkg/message"
-	"trail_didi_3/pkg/redis"
+	"trail_didi_3/pkg/orm"
 	"trail_didi_3/pkg/util"
 )
 
 type SdriverProcess struct {
 	Conn net.Conn
-	message.Driver
+	driver.Driver
 }
 
 func NewSdriverProcess(conn net.Conn) *SdriverProcess {
@@ -39,24 +40,25 @@ func (this *SdriverProcess) DriverLoginCheck(mes message.Message) {
 	var resLoginMes message.DriverResLoginMes
 
 	// 从数据中获取数据
-	rdConn := redis.GetInstance()
-	defer rdConn.Close()
-	//todo 从数据库中获取登陆司机信息
-	driver, ok := redis.SelectDriverInfo(rdConn, message.DriverInfoKey, loginMes.Id)
-	if ok {
+	where := make(map[string]interface{})
+	where["driver_account"] = loginMes.DriverAccount
+	Driver := driver.Driver{}
+	orm.GetInstance().Where(where).One(&Driver)
+
+	if Driver.Id > 0 {
 		// 验证数据是否合法
-		if loginMes.Id == driver.Id && helper.Md5V2(loginMes.DriverPwd) == driver.DriverPwd {
+		if loginMes.DriverAccount == Driver.DriverAccount && bcrypt.CompareHashAndPassword([]byte(Driver.DriverPwd), []byte(loginMes.DriverPwd)) == nil {
 			resLoginMes.Code = message.CodeLoginSuccessful
 			// 用户登录成功，则将数据存到在线用户管理中
-			this.Id = driver.Id
-			this.DriverName = driver.DriverName
+			this.Id = Driver.Id
+			this.DriverName = Driver.DriverName
 			this.DriverStatus = true
 			//todo 添登陆的司机添加到一个map容器中，保存在线的司机列表
 			SMDRIVER.AddOnlineUser(this)
-			resLoginMes.Driver = message.Driver{
-				Id:           driver.Id,
-				DriverName:   driver.DriverName,
-				DriverStatus: driver.DriverStatus,
+			resLoginMes.Driver = driver.Driver{
+				Id:           Driver.Id,
+				DriverName:   Driver.DriverName,
+				DriverStatus: Driver.DriverStatus,
 			}
 		} else {
 			resLoginMes.Code = message.CodeLoginFailure
@@ -97,17 +99,20 @@ func (this *SdriverProcess) DriverRegister(mes message.Message) {
 	// 定义返回消息类型
 	var resRegisterMes message.DriverResRegisterMes
 
-	// 获取数据库的连接,并读取
-	rdConn := redis.GetInstance()
-	defer rdConn.Close()
-	//todo 将乘客的注册信息添加到数据库
-	_, ok = redis.SelectDriverInfo(rdConn, message.DriverInfoKey, registerMes.Id)
-
-	if ok {
+	// 从数据中获取数据
+	where := make(map[string]interface{})
+	where["driver_account"] = registerMes.DriverAccount
+	Driver := driver.Driver{}
+	orm.GetInstance().Where(where).One(&Driver)
+	if Driver.Id > 0 {
 		resRegisterMes.Code = message.CodeRegisterFailure
 	} else {
-		ok := redis.AddDriver(rdConn, message.DriverInfoKey, registerMes.Id, mes.Data)
-		if ok {
+		Driver.DriverAccount = registerMes.DriverAccount
+		pwd, _ := bcrypt.GenerateFromPassword([]byte(registerMes.DriverPwd), bcrypt.DefaultCost)
+		Driver.DriverPwd = string(pwd)
+		Driver.DriverName = registerMes.DriverName
+		orm.GetInstance().Create(&Driver)
+		if Driver.Id > 0 {
 			resRegisterMes.Code = message.CodeRegisterSuccessful
 		} else {
 			resRegisterMes.Code = message.CodeRegisterFailure
@@ -139,7 +144,7 @@ func (this *SdriverProcess) ExitLogin(mes message.Message) {
 		return
 	}
 	// 将要退出登录的用户从在线列表中删除
-	delete(SMDRIVER.OnlineDrivers, exitLoginMes.Id)
+	delete(SMDRIVER.OnlineDrivers, int(exitLoginMes.Id))
 	this.Conn.Close()
 	fmt.Println(SMDRIVER.OnlineDrivers)
 	fmt.Println("登陆司机集合22", SMDRIVER.GetAllOnlineUser())

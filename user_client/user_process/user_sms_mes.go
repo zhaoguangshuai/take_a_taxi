@@ -22,7 +22,7 @@ func NewCsmsMes(conn net.Conn) *CsmsMes {
 
 //todo 乘客与司机进行沟通
 func (this *CsmsMes) SendDialogToAnother() {
-	var otherDriverId int
+	var otherDriverId uint64
 	var dialog string
 	var dialogUserToDriverMes message.UserToDriverMes
 	fmt.Println("请输入你想沟通的司机Id:")
@@ -73,7 +73,7 @@ func (this *CsmsMes) SendDialogToAnother() {
 			fmt.Println(" 2 退出登录")
 			cp := NewCuserProcess()
 			cp.Conn = Csms.Conn
-			cp.ExitLogin(CurUser.UserId)
+			cp.ExitLogin(int(CurUser.Id))
 			os.Exit(0)
 		case 3:
 			Csms.SendDialogToAnother()

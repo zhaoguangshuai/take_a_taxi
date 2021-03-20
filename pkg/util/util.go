@@ -1,6 +1,7 @@
 package util
 
 import (
+	"trail_didi_3/models/order"
 	"trail_didi_3/pkg/message"
 	"encoding/binary"
 	"encoding/json"
@@ -438,8 +439,8 @@ func (this *transfer) EncapsulationPacket(Type message.MesType,UserType string, 
 		return mes, err
 	case message.OrderPushMesType:
 		mes.Type = message.OrderPushMesType
-		var orderMes message.Order
-		orderMes, ok := Data.(message.Order)
+		var orderMes order.Order
+		orderMes, ok := Data.(order.Order)
 		if !ok {
 			return
 		}
@@ -727,7 +728,7 @@ func (this *transfer) ParsePacket(mes message.Message) (DataMes interface{}, err
 		return orderMes, err
 	case message.OrderPushMesType:
 		//todo 解析乘客下单信息数据
-		var orderMes message.Order
+		var orderMes order.Order
 		// DialogOtherUserMes 反序列化
 		err := json.Unmarshal([]byte(mes.Data), &orderMes)
 		if err != nil {

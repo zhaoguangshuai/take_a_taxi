@@ -1,19 +1,19 @@
 package Sprocess
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
-	"time"
+	"trail_didi_3/models/order"
+	"trail_didi_3/models/user"
 	"trail_didi_3/pkg/helper"
 	"trail_didi_3/pkg/message"
-	"trail_didi_3/pkg/redis"
+	"trail_didi_3/pkg/orm"
 	"trail_didi_3/pkg/util"
 )
 
 type SOrderProcess struct {
 	Conn net.Conn
-	User message.User
+	User user.User
 }
 
 func NewSOrderProcess(conn net.Conn) *SOrderProcess {
@@ -37,29 +37,20 @@ func (this *SOrderProcess) CreateOrder(smsMes message.Message) {
 		return
 	}
 	//todo 正式创建订单
-	var orderInfo message.Order
+	var orderInfo order.Order
 	var orderSn = helper.GetOrderSn()
 	orderInfo.OrderSn = orderSn
 	orderInfo.UserId = dialogOtherUserMes.Order.UserId
 	orderInfo.StartAddress = dialogOtherUserMes.StartAddress
 	orderInfo.EndAddress = dialogOtherUserMes.EndAddress
 	orderInfo.OrderStatus = message.OrderStatusOne
-	orderInfo.CreatedAt = time.Now().Format("2006-01-02 15:04:05")
 
 	// 获取数据库的连接,并读取
-	rdConn := redis.GetInstance()
-	defer rdConn.Close()
-
-	data, err := json.Marshal(orderInfo)
-	if err != nil {
-		fmt.Println("订单信息序列化失败111")
-	}
-	ok = redis.AddOrder(rdConn, message.OrderInfoKey, orderSn, string(data))
-
+	orm.GetInstance().Create(&orderInfo)
 	// 定义返回消息类型
 	var resOrderMes message.ResOrderMes
 
-	if ok { //todo 订单创建成功
+	if orderInfo.Id > 0 { //todo 订单创建成功
 		//todo 向司机推送订单信息，好让司机抢单
 		NewSSmsProcess(this.Conn).SendMesToAllDriver(orderInfo)
 		resOrderMes.Order = orderInfo
@@ -100,29 +91,28 @@ func (this *SOrderProcess) CancelOrder(smsMes message.Message) {
 	}
 	//todo 正式取消订单
 	// 获取数据库的连接,并读取
-	rdConn := redis.GetInstance()
-	defer rdConn.Close()
-
-	orderInfo, _ := redis.SelectOrderInfo(rdConn, message.OrderInfoKey, requestInfo.OrderSn)
+	where := make(map[string]interface{})
+	where["order_sn"] = requestInfo.OrderSn
+	Order := order.Order{}
+	orm.GetInstance().Where(where).One(&Order)
 
 	// 定义返回消息类型
 	var resOrderMes message.ResCancelOrder
 	resOrderMes.OrderSn = requestInfo.OrderSn
 	//todo 属于已接单状态，并且是自己的订单 才可以取消
-	if orderInfo.OrderStatus == message.OrderStatusTwo && orderInfo.UserId == requestInfo.UserId {
+	if Order.OrderStatus == message.OrderStatusTwo && Order.UserId == requestInfo.UserId {
 		//修改订单状态为取消
-		orderInfo.OrderStatus = message.OrderStatusFour
-		data, _ := json.Marshal(orderInfo)
-		redis.AddOrder(rdConn, message.OrderInfoKey, orderInfo.OrderSn, string(data))
+		Order.OrderStatus = message.OrderStatusFour
+		orm.GetInstance().Save(Order)
 
 		//todo 乘客向该司机推送取消订单的消息
 		// 获取接收方的连接数据
-		sp, ok := SMDRIVER.OnlineDrivers[orderInfo.DriverId]
+		sp, ok := SMDRIVER.OnlineDrivers[int(Order.DriverId)]
 		if !ok {
 			return
 		}
 		var driverPushUserIsOrder message.ToDriverCancelOrder
-		driverPushUserIsOrder.Order = orderInfo
+		driverPushUserIsOrder.Order = Order
 		driverPushUserIsOrder.User = this.User
 
 		// 创建接收方的Transfer实例
@@ -140,11 +130,10 @@ func (this *SOrderProcess) CancelOrder(smsMes message.Message) {
 		//取消成功
 		resOrderMes.Code = message.CodeCancelOrderSuccessful
 		//todo 属于待接单状态，并且是自己的订单，才可以取消
-	} else if orderInfo.OrderStatus == message.OrderStatusOne && orderInfo.UserId == requestInfo.UserId {
+	} else if Order.OrderStatus == message.OrderStatusOne && Order.UserId == requestInfo.UserId {
 		//修改订单状态为取消
-		orderInfo.OrderStatus = message.OrderStatusFour
-		data, _ := json.Marshal(orderInfo)
-		redis.AddOrder(rdConn, message.OrderInfoKey, orderInfo.OrderSn, string(data))
+		Order.OrderStatus = message.OrderStatusFour
+		orm.GetInstance().Save(Order)
 		//取消成功
 		resOrderMes.Code = message.CodeCancelOrderSuccessful
 	} else { //其他情况取消失败
@@ -183,30 +172,29 @@ func (this *SOrderProcess) EndOrder(smsMes message.Message) {
 	}
 	//todo 正式结束订单
 	// 获取数据库的连接,并读取
-	rdConn := redis.GetInstance()
-	defer rdConn.Close()
-
-	orderInfo, _ := redis.SelectOrderInfo(rdConn, message.OrderInfoKey, requestInfo.OrderSn)
+	where := make(map[string]interface{})
+	where["order_sn"] = requestInfo.OrderSn
+	Order := order.Order{}
+	orm.GetInstance().Where(where).One(&Order)
 
 	// 定义返回消息类型
 	var resOrderMes message.ResEndOrder
 	resOrderMes.OrderSn = requestInfo.OrderSn
 	//todo 属于已接单状态，并且是自己接的订单 才可以改为已完成
-	if orderInfo.OrderStatus == message.OrderStatusTwo && orderInfo.DriverId == requestInfo.DriverId {
+	if Order.OrderStatus == message.OrderStatusTwo && Order.DriverId == requestInfo.DriverId {
 		//修改订单状态为取消
-		orderInfo.OrderStatus = message.OrderStatusThree
-		data, _ := json.Marshal(orderInfo)
-		redis.AddOrder(rdConn, message.OrderInfoKey, orderInfo.OrderSn, string(data))
+		Order.OrderStatus = message.OrderStatusThree
+		orm.GetInstance().Save(Order)
 
 		//todo 司机向该乘客推送结束订单的消息
 		// 获取接收方的连接数据
-		sp, ok := SMUSER.OnlineUsers[orderInfo.UserId]
+		sp, ok := SMUSER.OnlineUsers[int(Order.UserId)]
 		if !ok {
 			return
 		}
 		var driverPushUserEndOrder message.ToUserEndOrder
-		driverPushUserEndOrder.Order = orderInfo
-		driverPushUserEndOrder.Driver = SMDRIVER.OnlineDrivers[requestInfo.DriverId].Driver
+		driverPushUserEndOrder.Order = Order
+		driverPushUserEndOrder.Driver = SMDRIVER.OnlineDrivers[int(requestInfo.DriverId)].Driver
 
 		// 创建接收方的Transfer实例
 		tfSp := util.NewTransfer(sp.Conn)
@@ -225,7 +213,7 @@ func (this *SOrderProcess) EndOrder(smsMes message.Message) {
 	} else { //其他情况结束失败
 		resOrderMes.Code = message.CodeEndOrderFailure
 	}
-	resOrderMes.OrderSn = orderInfo.OrderSn
+	resOrderMes.OrderSn = Order.OrderSn
 
 	// 封装resRegisterMes
 	resMes, err := tf.EncapsulationPacket(message.ResEndOrderMesType, "driver", resOrderMes)

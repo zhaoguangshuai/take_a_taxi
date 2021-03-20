@@ -1,19 +1,20 @@
 package Sprocess
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 	"sync"
+	"trail_didi_3/models/driver"
+	"trail_didi_3/models/order"
 	"trail_didi_3/pkg/message"
-	"trail_didi_3/pkg/redis"
+	"trail_didi_3/pkg/orm"
 	"trail_didi_3/pkg/util"
 )
 
 var rwMutex *sync.RWMutex //定义读写锁的全局变量
 type SdriverSmsProcess struct {
 	Conn   net.Conn
-	Driver message.Driver
+	Driver driver.Driver
 }
 
 func NewSDriverSmsProcess(conn net.Conn) *SdriverSmsProcess {
@@ -32,41 +33,40 @@ func (this *SdriverSmsProcess) SendMesIsOrder(smsMes message.Message) {
 		return
 	}
 	// 进行类型断言
-	driverIsOrder, ok := dataMes.(message.DriverIsOrder)
+	driverIsOrder, _ := dataMes.(message.DriverIsOrder)
 
 	//定义返回信息
 	var driverResMes message.ResOrderMes
-
-	//获取redis服务连接信息
-	rdConn := redis.GetInstance()
-	defer rdConn.Close()
 
 	rwMutex = new(sync.RWMutex) //获取该包的对象
 	//开始上锁
 	rwMutex.Lock()
 	//todo 获取订单信息
-	orderInfo, ok := redis.SelectOrderInfo(rdConn, message.OrderInfoKey, driverIsOrder.Order_sn)
-	if !ok {
+	where := make(map[string]interface{})
+	where["order_sn"] = driverIsOrder.Order_sn
+	Order := order.Order{}
+	orm.GetInstance().Where(where).One(&Order)
+
+	if Order.Id <= 0 {
 		fmt.Println("该订单不存在")
 		driverResMes.Code = message.CodeIsOrderStatusOne
 	}
-	orderStatus := orderInfo.OrderStatus
+	orderStatus := Order.OrderStatus
 	if orderStatus == message.OrderStatusOne { //代表司机接单成功
 		//修改订单状态，修改订单接单司机
-		orderInfo.OrderStatus = message.OrderStatusTwo
-		orderInfo.DriverId = driverIsOrder.Driver.Id
-		data, _ := json.Marshal(orderInfo)
-		redis.AddOrder(rdConn, message.OrderInfoKey, orderInfo.OrderSn, string(data))
+		Order.OrderStatus = message.OrderStatusTwo
+		Order.DriverId = driverIsOrder.Driver.Id
+		orm.GetInstance().Save(Order)
 
 		//todo 司机向该乘客发送接单成功消息
 		// 获取接收方的连接数据
-		sp, ok := SMUSER.OnlineUsers[orderInfo.UserId]
+		sp, ok := SMUSER.OnlineUsers[int(Order.UserId)]
 		if !ok {
 			return
 		}
 		var driverPushUserIsOrder message.DriverPushUserIsOrder
 		driverPushUserIsOrder.Driver = driverIsOrder.Driver
-		driverPushUserIsOrder.Order = orderInfo
+		driverPushUserIsOrder.Order = Order
 		driverPushUserIsOrder.User = sp.User
 
 		// 创建接收方的Transfer实例
@@ -95,7 +95,7 @@ func (this *SdriverSmsProcess) SendMesIsOrder(smsMes message.Message) {
 	case message.OrderStatusFour:
 		driverResMes.Code = message.CodeIsOrderStatusTwo
 	}
-	driverResMes.Order = orderInfo
+	driverResMes.Order = Order
 	//todo 向司机客户端返回接单成功
 	ResMes, err := tf.EncapsulationPacket(message.ResDriverIsOrderMesType, "driver", driverResMes)
 	if err != nil {
@@ -125,7 +125,7 @@ func (this *SdriverSmsProcess) SendMesToAnother(smsMes message.Message) {
 		return
 	}
 	//todo 获取乘客（接受信息者）的连接数据
-	sp, ok := SMUSER.OnlineUsers[dialogOtherUserMes.OtherUserId]
+	sp, ok := SMUSER.OnlineUsers[int(dialogOtherUserMes.OtherUserId)]
 	if !ok {
 		return
 	}

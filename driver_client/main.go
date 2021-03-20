@@ -12,7 +12,7 @@ func init() {
 	config.Initialize()
 }
 func main() {
-	var DriverId int
+	var DriverAccount string
 	var DriverPwd string
 	var DriverName string
 	for {
@@ -28,24 +28,24 @@ func main() {
 		case 1:
 			fmt.Println("-----登录-----")
 			fmt.Println("请输入账号：")
-			fmt.Scanf("%d\n", &DriverId)
+			fmt.Scanf("%s\n", &DriverAccount)
 			fmt.Println("请输入密码：")
 			fmt.Scanf("%s\n", &DriverPwd)
 			// 调用司机登录方法
-			err := Cprocess.NewCuserProcess().DriverLogin(DriverId, DriverPwd)
+			err := Cprocess.NewCuserProcess().DriverLogin(DriverAccount, DriverPwd)
 			if err != nil {
 				fmt.Println("服务器未开启,请联系后台人员")
 			}
 		case 2:
 			fmt.Println("司机注册")
 			fmt.Println("请输入账号：")
-			fmt.Scanf("%d\n", &DriverId)
+			fmt.Scanf("%s\n", &DriverAccount)
 			fmt.Println("请输入密码：")
 			fmt.Scanf("%s\n", &DriverPwd)
 			fmt.Println("请输入昵称：")
 			fmt.Scanf("%s\n", &DriverName)
 			// 调用司机注册方法
-			err := Cprocess.NewCuserProcess().DriverRegister(DriverId, DriverPwd, DriverName)
+			err := Cprocess.NewCuserProcess().DriverRegister(DriverAccount, DriverPwd, DriverName)
 			if err != nil {
 				fmt.Println("服务器未开启,请联系后台人员")
 			}

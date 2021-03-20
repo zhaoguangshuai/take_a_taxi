@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"trail_didi_3/bootstrap"
 	"trail_didi_3/config"
 	config2 "trail_didi_3/pkg/config"
 	"trail_didi_3/server/server_process"
@@ -25,6 +26,8 @@ func init() {
 	Sprocess.NewSonlineUserMgr()
 	//todo 维护一个司机管理集合
 	Sprocess.NewSonlineDriverMgr()
+	//迁移文件执行
+	bootstrap.AutoMigrate()
 }
 
 func main() {

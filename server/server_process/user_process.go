@@ -2,16 +2,17 @@ package Sprocess
 
 import (
 	"fmt"
+	"golang.org/x/crypto/bcrypt"
 	"net"
-	"trail_didi_3/pkg/helper"
+	"trail_didi_3/models/user"
 	"trail_didi_3/pkg/message"
-	"trail_didi_3/pkg/redis"
+	"trail_didi_3/pkg/orm"
 	"trail_didi_3/pkg/util"
 )
 
 type SuserProcess struct {
 	Conn net.Conn
-	message.User
+	user.User
 }
 
 func NewSuerProcess(conn net.Conn) *SuserProcess {
@@ -39,23 +40,24 @@ func (this *SuserProcess) LoginCheck(mes message.Message) {
 	var resLoginMes message.ResLoginMes
 
 	//todo 从数据库中获取登陆用户信息
-	rdConn := redis.GetInstance()
-	//defer rdConn.Close()
-	user, ok := redis.SelectUserInfo(rdConn, message.DatabaseKey, loginMes.UserId)
-	if ok {
+	where := make(map[string]interface{})
+	where["user_account"] = loginMes.UserAccount
+	User := user.User{}
+	orm.GetInstance().Where(where).One(&User)
+	if User.Id > 0 {
 		// 验证数据是否合法
-		if loginMes.UserId == user.UserId && helper.Md5V2(loginMes.UserPwd) == user.UserPwd {
+		if loginMes.UserAccount == User.UserAccount && bcrypt.CompareHashAndPassword([]byte(User.UserPwd), []byte(loginMes.UserPwd)) == nil {
 			resLoginMes.Code = message.CodeLoginSuccessful
 			// 用户登录成功，则将数据存到在线用户管理中
-			this.UserId = user.UserId
-			this.UserName = user.UserName
+			this.Id = User.Id
+			this.UserName = User.UserName
 			this.UserStatus = true
 			//todo 添登陆的乘客添加到一个map容器中，保存在线的乘客列表
 			SMUSER.AddOnlineUser(this)
-			resLoginMes.User = message.User{
-				UserId:     user.UserId,
-				UserName:   user.UserName,
-				UserStatus: user.UserStatus,
+			resLoginMes.User = user.User{
+				Id:         User.Id,
+				UserName:   User.UserName,
+				UserStatus: User.UserStatus,
 			}
 		} else {
 			resLoginMes.Code = message.CodeLoginFailure
@@ -101,14 +103,19 @@ func (this *SuserProcess) Register(mes message.Message) {
 	var resRegisterMes message.ResRegisterMes
 
 	// 获取数据库的连接,并读取
-	rdConn := redis.GetInstance()
-	defer rdConn.Close()
-	_, ok = redis.SelectUserInfo(rdConn, message.DatabaseKey, registerMes.UserId)
-	if ok {
+	where := make(map[string]interface{})
+	where["user_account"] = registerMes.UserAccount
+	User := user.User{}
+	orm.GetInstance().Where(where).One(&User)
+	if User.Id > 0 {
 		resRegisterMes.Code = message.CodeRegisterFailure
 	} else {
-		ok = redis.AddUser(rdConn, message.DatabaseKey, registerMes.UserId, mes.Data)
-		if ok {
+		User.UserAccount = registerMes.UserAccount
+		pwd, _ := bcrypt.GenerateFromPassword([]byte(registerMes.UserPwd), bcrypt.DefaultCost)
+		User.UserPwd = string(pwd)
+		User.UserName = registerMes.UserName
+		orm.GetInstance().Create(&User)
+		if User.Id > 0 {
 			resRegisterMes.Code = message.CodeRegisterSuccessful
 		} else {
 			resRegisterMes.Code = message.CodeRegisterFailure
@@ -141,7 +148,7 @@ func (this *SuserProcess) ExitLogin(mes message.Message) {
 		return
 	}
 	// 将要退出登录的用户从在线列表中删除
-	delete(SMUSER.OnlineUsers, exitLoginMes.UserId)
+	delete(SMUSER.OnlineUsers, int(exitLoginMes.Id))
 	this.Conn.Close()
 	fmt.Println("登陆乘客集合22", SMUSER.GetAllOnlineUser())
 

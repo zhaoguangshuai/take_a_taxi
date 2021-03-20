@@ -3,8 +3,8 @@ package Cprocess
 import (
 	"fmt"
 	"net"
+	"trail_didi_3/models/driver"
 	config2 "trail_didi_3/pkg/config"
-	"trail_didi_3/pkg/helper"
 	"trail_didi_3/pkg/message"
 	"trail_didi_3/pkg/util"
 )
@@ -18,7 +18,7 @@ func NewCuserProcess() *CuserProcess {
 	return &CuserProcess{}
 }
 
-func (this *CuserProcess) DriverLogin(DriverId int, DriverPwd string) (err error) {
+func (this *CuserProcess) DriverLogin(DriverAccount string, DriverPwd string) (err error) {
 	// 连接到服务器
 	this.Conn, err = net.Dial("tcp", config2.GetString("app.url"))
 	// fmt.Println("address=", this.Conn.LocalAddr())
@@ -29,9 +29,9 @@ func (this *CuserProcess) DriverLogin(DriverId int, DriverPwd string) (err error
 	defer this.Conn.Close()
 	// 创建登录消息实例
 	loginMes := message.DriverLoginMes{
-		Driver: message.Driver{
-			Id:        DriverId,
-			DriverPwd: DriverPwd,
+		Driver: driver.Driver{
+			DriverAccount: DriverAccount,
+			DriverPwd:     DriverPwd,
 		},
 	}
 	//  创键Transfer实例
@@ -80,7 +80,7 @@ func (this *CuserProcess) DriverLogin(DriverId int, DriverPwd string) (err error
 	return
 }
 
-func (this *CuserProcess) DriverRegister(DriverId int, DriverPwd, DriverName string) (err error) {
+func (this *CuserProcess) DriverRegister(DriverAccount string, DriverPwd, DriverName string) (err error) {
 	fmt.Println("司机注册")
 	// 连接服务器
 	this.Conn, err = net.Dial("tcp", config2.GetString("app.url"))
@@ -92,10 +92,10 @@ func (this *CuserProcess) DriverRegister(DriverId int, DriverPwd, DriverName str
 
 	// 创建RegisterMes实例
 	registerMes := message.DriverRegisterMes{
-		Driver: message.Driver{
-			Id:         DriverId,
-			DriverPwd:  helper.Md5V2(DriverPwd),
-			DriverName: DriverName,
+		Driver: driver.Driver{
+			DriverAccount: DriverAccount,
+			DriverPwd:     DriverPwd,
+			DriverName:    DriverName,
 		},
 	}
 	// 创建Transfer实例

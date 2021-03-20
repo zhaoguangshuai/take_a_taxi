@@ -48,7 +48,7 @@ func (this *driverCsmsMes) SendDriverIsOrder(order_sn string) {
 	time.Sleep(1 * time.Second)
 	rdConn := redis.GetInstance()
 	defer rdConn.Close()
-	var status_key = order_sn + "" + strconv.Itoa(CurDriver.Id)
+	var status_key = order_sn + "" + strconv.Itoa(int(CurDriver.Id))
 	data, ok := redis.SelectResultInfo(rdConn, message.ResDriverIsOrderStatus, status_key)
 	if !ok {
 		fmt.Println("从数据库获取接单同步返回信息失败")
@@ -96,7 +96,7 @@ func (this *driverCsmsMes) isOrderSuccess() {
 			fmt.Println(" 2 退出登录")
 			cp := NewCuserProcess()
 			cp.Conn = DriverCsms.Conn
-			cp.ExitLogin(CurDriver.Id)
+			cp.ExitLogin(int(CurDriver.Id))
 			os.Exit(0)
 		case 3:
 			this.EndOrder()
@@ -141,7 +141,7 @@ func (this *driverCsmsMes) EndOrder() {
 	time.Sleep(1 * time.Second)
 	rdConn := redis.GetInstance()
 	defer rdConn.Close()
-	var status_key = order_sn + "" + strconv.Itoa(CurDriver.Id)
+	var status_key = order_sn + "" + strconv.Itoa(int(CurDriver.Id))
 	data, ok := redis.SelectResultInfo(rdConn, message.ResDriverEndOrderStatus, status_key)
 	if !ok {
 		fmt.Println("从数据库获取结束订单同步返回信息失败")
@@ -157,7 +157,7 @@ func (this *driverCsmsMes) EndOrder() {
 
 //todo 司机给乘客发送消息
 func (this *driverCsmsMes) SendDialogToAnother() {
-	var otherUserId int
+	var otherUserId uint64
 	var dialog string
 	var DriverToUserMes message.DriverToUserMes
 	fmt.Println("请输入你想沟通的乘客Id:")

@@ -15,16 +15,16 @@ func NewSonlineDriverMgr() {
 
 // 对在线用户进行增删改查操作
 func (this *SonlineDriverMgr) AddOnlineUser(sp *SdriverProcess) {
-	SMDRIVER.OnlineDrivers[sp.Id] = sp
+	SMDRIVER.OnlineDrivers[int(sp.Id)] = sp
 }
 func (this *SonlineDriverMgr) DelOnlineUser(sp *SdriverProcess) {
-	delete(SMDRIVER.OnlineDrivers, sp.Id)
+	delete(SMDRIVER.OnlineDrivers, int(sp.Id))
 }
 func (this *SonlineDriverMgr) ModifyOnlineUser(sp *SdriverProcess) {
 	this.AddOnlineUser(sp)
 }
 func (this *SonlineDriverMgr) SeletcOnlineUser(sp *SdriverProcess) (value *SdriverProcess, ok bool) {
-	value, ok = this.OnlineDrivers[sp.Id]
+	value, ok = this.OnlineDrivers[int(sp.Id)]
 	return
 }
 func (this *SonlineDriverMgr) GetAllOnlineUser() (users map[int]*SdriverProcess) {

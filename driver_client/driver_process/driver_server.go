@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"trail_didi_3/models/order"
 	"trail_didi_3/pkg/message"
 	"trail_didi_3/pkg/redis"
 	"trail_didi_3/pkg/util"
@@ -35,7 +36,7 @@ func ShowLoginInterface() {
 			fmt.Println(" 2 退出登录")
 			cp := NewCuserProcess()
 			cp.Conn = DriverCsms.Conn
-			cp.ExitLogin(CurDriver.Id)
+			cp.ExitLogin(int(CurDriver.Id))
 			os.Exit(0)
 		default:
 			fmt.Println("无此功能")
@@ -78,7 +79,7 @@ func ServerProcessMes(conn net.Conn) {
 			fmt.Println(info)
 		case message.OrderPushMesType:
 			// 将数据转换成CurUserMes
-			orderMes, ok := DataMes.(message.Order)
+			orderMes, ok := DataMes.(order.Order)
 			if !ok {
 				return
 			}
@@ -94,7 +95,7 @@ func ServerProcessMes(conn net.Conn) {
 			}
 			// 将数据输出在控制台
 			info := fmt.Sprintf("乘客%s[%d]对你%s[%d]说:%s",
-				dialogOtherMes.UserName, dialogOtherMes.UserId, dialogOtherMes.OtherDriverName, dialogOtherMes.OtherDriverId, dialogOtherMes.Dialog)
+				dialogOtherMes.UserName, dialogOtherMes.Id, dialogOtherMes.OtherDriverName, dialogOtherMes.OtherDriverId, dialogOtherMes.Dialog)
 			fmt.Println(info)
 		case message.ResDriverIsOrderMesType:
 			//todo 获取司机接单成功的返回信息
@@ -105,7 +106,7 @@ func ServerProcessMes(conn net.Conn) {
 			//将司机接单返回信息存进数据库
 			rdConn := redis.GetInstance()
 			defer rdConn.Close()
-			var status_key = dialogOtherMes.OrderSn + "" + strconv.Itoa(CurDriver.Id)
+			var status_key = dialogOtherMes.OrderSn + "" + strconv.Itoa(int(CurDriver.Id))
 			redis.AddResultInfo(rdConn, message.ResDriverIsOrderStatus, status_key, resMes.Data)
 		case message.ResEndOrderMesType:
 			//todo 获取司结束成功的返回信息
@@ -116,7 +117,7 @@ func ServerProcessMes(conn net.Conn) {
 			//将司机接单返回信息存进数据库
 			rdConn := redis.GetInstance()
 			defer rdConn.Close()
-			var status_key = dialogOtherMes.OrderSn + "" + strconv.Itoa(CurDriver.Id)
+			var status_key = dialogOtherMes.OrderSn + "" + strconv.Itoa(int(CurDriver.Id))
 			redis.AddResultInfo(rdConn, message.ResDriverEndOrderStatus, status_key, resMes.Data)
 		default:
 			break

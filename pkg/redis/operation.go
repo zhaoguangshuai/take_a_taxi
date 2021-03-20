@@ -3,12 +3,15 @@ package redis
 import (
 	"encoding/json"
 	"github.com/go-redis/redis"
+	"trail_didi_3/models/driver"
+	"trail_didi_3/models/order"
+	"trail_didi_3/models/user"
 	"trail_didi_3/pkg/message"
 	"trail_didi_3/pkg/types"
 )
 
 // 查询用户数据
-func SelectDriverInfo(Redis *redis.Client, key string, filed int) (data message.Driver, flag bool) {
+func SelectDriverInfo(Redis *redis.Client, key string, filed int) (data driver.Driver, flag bool) {
 	res := Redis.HGet(key, types.IntToString(filed)).Val()
 	err := json.Unmarshal([]byte(res), &data)
 	if err != nil {
@@ -25,7 +28,7 @@ func AddDriver(Redis *redis.Client, key string, filed int, value string) bool {
 }
 
 // 查询用户数据
-func SelectUserInfo(Redis *redis.Client, key string, filed int) (data message.User, flag bool) {
+func SelectUserInfo(Redis *redis.Client, key string, filed int) (data user.User, flag bool) {
 	res := Redis.HGet(key, types.IntToString(filed)).Val()
 	err := json.Unmarshal([]byte(res), &data)
 	if err != nil {
@@ -48,7 +51,7 @@ func AddOrder(Redis *redis.Client, key string, field string, value string) bool 
 }
 
 //查询订单数据
-func SelectOrderInfo(Redis *redis.Client, key string, field string) (data message.Order, flag bool) {
+func SelectOrderInfo(Redis *redis.Client, key string, field string) (data order.Order, flag bool) {
 	res := Redis.HGet(key, field).Val()
 	err := json.Unmarshal([]byte(res), &data)
 	if err != nil {

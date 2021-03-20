@@ -3,8 +3,8 @@ package Cprocess
 import (
 	"fmt"
 	"net"
+	"trail_didi_3/models/user"
 	config2 "trail_didi_3/pkg/config"
-	"trail_didi_3/pkg/helper"
 	"trail_didi_3/pkg/message"
 	"trail_didi_3/pkg/util"
 )
@@ -19,7 +19,7 @@ func NewCuserProcess() *CuserProcess {
 	return &CuserProcess{}
 }
 
-func (this *CuserProcess) Login(userId int, userPwd string) (err error) {
+func (this *CuserProcess) Login(UserAccount string, userPwd string) (err error) {
 	// 连接到服务器
 	this.Conn, err = net.Dial("tcp", config2.GetString("app.url"))
 	if err != nil {
@@ -29,8 +29,8 @@ func (this *CuserProcess) Login(userId int, userPwd string) (err error) {
 	defer this.Conn.Close()
 	// 创建登录消息实例
 	loginMes := message.LoginMes{
-		User: message.User{
-			UserId:  userId,
+		User: user.User{
+			UserAccount:  UserAccount,
 			UserPwd: userPwd,
 		},
 	}
@@ -86,7 +86,7 @@ func (this *CuserProcess) Login(userId int, userPwd string) (err error) {
 /**
 乘客注册
 */
-func (this *CuserProcess) Register(userId int, userPwd, userName string) (err error) {
+func (this *CuserProcess) Register(UserAccount string, userPwd, userName string) (err error) {
 	fmt.Println("用户注册")
 	//todo 连接服务器
 	this.Conn, err = net.Dial("tcp", config2.GetString("app.url"))
@@ -98,9 +98,9 @@ func (this *CuserProcess) Register(userId int, userPwd, userName string) (err er
 
 	//todo 创建RegisterMes实例
 	registerMes := message.RegisterMes{
-		User: message.User{
-			UserId:   userId,
-			UserPwd:  helper.Md5V2(userPwd),
+		User: user.User{
+			UserAccount:   UserAccount,
+			UserPwd:  userPwd,
 			UserName: userName,
 		},
 	}

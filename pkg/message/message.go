@@ -1,5 +1,11 @@
 package message
 
+import (
+	"trail_didi_3/models/driver"
+	"trail_didi_3/models/order"
+	"trail_didi_3/models/user"
+)
+
 const (
 	LoginMesType             = "LoginMes"
 	ResLoginMesType          = "LoginResMes"
@@ -71,7 +77,7 @@ const (
 
 type EndOrder struct {
 	OrderSn string `json:"order_sn"`
-	DriverId int `json:"driver_id"`
+	DriverId uint64 `json:"driver_id"`
 }
 
 type ResEndOrder struct {
@@ -80,13 +86,13 @@ type ResEndOrder struct {
 }
 
 type ToUserEndOrder struct { //司机向乘客推送结束订单消息
-	Order
-	Driver
+	order.Order
+	driver.Driver
 }
 
 type CancelOrder struct {
 	OrderSn string `json:"order_sn"`
-	UserId int `json:"user_id"`
+	UserId uint64 `json:"user_id"`
 }
 
 type ResCancelOrder struct {
@@ -95,8 +101,8 @@ type ResCancelOrder struct {
 }
 
 type ToDriverCancelOrder struct { //乘客向司机推送取消订单的信息
-	Order
-	User
+	order.Order
+	user.User
 }
 
 type ResRegisterMes struct {
@@ -109,14 +115,14 @@ type ResMes struct {
 }
 
 type DriverIsOrder struct {
-	Driver
+	driver.Driver
 	Order_sn string
 }
 
 type DriverPushUserIsOrder struct { //司机向乘客推送接单成功信息
-	Driver
-	Order
-	User
+	driver.Driver
+	order.Order
+	user.User
 }
 
 type MesType string
@@ -130,86 +136,86 @@ type Message struct {
 
 // 登录
 type LoginMes struct {
-	User
+	user.User
 }
 
 // 状态
 type ResStatusMes struct {
-	User
+	user.User
 }
 
 type ResLoginMes struct {
 	ResMes
-	User
+	user.User
 }
 
 type ExitLoginMes struct {
-	User
+	user.User
 }
 
 // 注册
 type RegisterMes struct {
-	User
+	user.User
 }
 
 // 消息
 type DialogMes struct {
-	User
+	user.User
 	Dialog string `json:"dialog"`
 }
 type DialogOtherUserMes struct {
-	User
-	OtherUserId int
+	user.User
+	OtherUserId uint64
 	Dialog      string `json:"dialog"`
 }
 
 //乘客下单信息
 type DialogOrderInfoMes struct {
-	User
-	Order
+	user.User
+	order.Order
 }
 
-type User struct {
-	UserId     int    `json:"userId"`
-	UserPwd    string `json:"userPwd"`
-	UserName   string `json:"userName"`
-	UserStatus bool   `json:"userStatus"` // 在线就是true
-}
-
-type Order struct {
-	OrderSn      string `json:"order_sn"`
-	UserId       int    `json:"user_id"`
-	DriverId     int    `json:"driver_id"`
-	StartAddress string `json:"start_address"`
-	EndAddress   string `json:"end_address"`
-	OrderStatus  int    `json:"order_status"`
-	CreatedAt    string `json:"created_at"`
-}
-
-type Driver struct {
-	Id     int `json:"id"`
-	DriverPwd    string `json:"driver_pwd"`
-	DriverName   string `json:"driver_name"`
-	DriverStatus bool   `json:"driver_status"` // 在线就是true
-}
+//type User struct {
+//	UserId     int    `json:"userId"`
+//	UserPwd    string `json:"userPwd"`
+//	UserName   string `json:"userName"`
+//	UserStatus bool   `json:"userStatus"` // 在线就是true
+//}
+//
+//type Order struct {
+//	OrderSn      string `json:"order_sn"`
+//	UserId       int    `json:"user_id"`
+//	DriverId     int    `json:"driver_id"`
+//	StartAddress string `json:"start_address"`
+//	EndAddress   string `json:"end_address"`
+//	OrderStatus  int    `json:"order_status"`
+//	CreatedAt    string `json:"created_at"`
+//}
+//
+//type Driver struct {
+//	Id     int `json:"id"`
+//	DriverPwd    string `json:"driver_pwd"`
+//	DriverName   string `json:"driver_name"`
+//	DriverStatus bool   `json:"driver_status"` // 在线就是true
+//}
 
 // 登录
 type DriverLoginMes struct {
-	Driver
+	driver.Driver
 }
 
 type DriverResLoginMes struct {
 	ResMes
-	Driver
+	driver.Driver
 }
 
 type DriverExitLoginMes struct {
-	Driver
+	driver.Driver
 }
 
 // 注册
 type DriverRegisterMes struct {
-	Driver
+	driver.Driver
 }
 type DriverResRegisterMes struct {
 	ResMes
@@ -217,25 +223,25 @@ type DriverResRegisterMes struct {
 
 // 状态
 type DriverResStatusMes struct {
-	Driver
+	driver.Driver
 }
 
 type ResOrderMes struct {
 	ResMes
-	Order
+	order.Order
 }
 
 //司机向乘客沟通
 type DriverToUserMes struct {
-	Driver
-	OtherUserId int
+	driver.Driver
+	OtherUserId uint64
 	OtherUserName string
 	Dialog      string `json:"dialog"`
 }
 //乘客向司机沟通
 type UserToDriverMes struct {
-	User
-	OtherDriverId int
+	user.User
+	OtherDriverId uint64
 	OtherDriverName string
 	Dialog      string `json:"dialog"`
 }

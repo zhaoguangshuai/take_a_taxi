@@ -2,13 +2,15 @@ package Sprocess
 
 import (
 	"net"
+	"trail_didi_3/models/order"
+	"trail_didi_3/models/user"
 	"trail_didi_3/pkg/message"
 	"trail_didi_3/pkg/util"
 )
 
 type SSmsProcess struct {
 	Conn net.Conn
-	User message.User
+	User user.User
 }
 
 func NewSSmsProcess(conn net.Conn) *SSmsProcess {
@@ -34,7 +36,7 @@ func (this *SSmsProcess) SendMesToAnother(smsMes message.Message) {
 		return
 	}
 	//todo 获取司机（接受信息者）的连接数据
-	sp, ok := SMDRIVER.OnlineDrivers[dialogOtherUserMes.OtherDriverId]
+	sp, ok := SMDRIVER.OnlineDrivers[int(dialogOtherUserMes.OtherDriverId)]
 	if !ok {
 		return
 	}
@@ -59,7 +61,7 @@ func (this *SSmsProcess) SendMesToAnother(smsMes message.Message) {
 /*
 用户下单后向所有司机推送消息
 */
-func (this *SSmsProcess) SendMesToAllDriver(orderInfo message.Order) {
+func (this *SSmsProcess) SendMesToAllDriver(orderInfo order.Order) {
 	//todo 向所有在线司机发送订单信息
 	drives := SMDRIVER.GetAllOnlineUser()
 	for _, sp := range drives {

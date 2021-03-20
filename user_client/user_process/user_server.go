@@ -41,7 +41,7 @@ func ShowLoginInterface() {
 			fmt.Println(" 2 退出登录")
 			cp := NewCuserProcess()
 			cp.Conn = Csms.Conn
-			cp.ExitLogin(CurUser.UserId)
+			cp.ExitLogin(int(CurUser.Id))
 			os.Exit(0)
 		default:
 			fmt.Println("无此功能")
@@ -89,7 +89,7 @@ func ServerProcessMes(conn net.Conn) {
 			//将司机接单返回信息存进数据库
 			rdConn := redis.GetInstance()
 			defer rdConn.Close()
-			redis.AddResultInfo(rdConn, message.ResCreateOrderStatus, strconv.Itoa(CurUser.UserId), resMes.Data)
+			redis.AddResultInfo(rdConn, message.ResCreateOrderStatus, strconv.Itoa(int(CurUser.Id)), resMes.Data)
 		case message.ResCancelOrderMesType:
 			//todo 获取乘客取消订单的返回信息
 			dialogOtherMes, ok := DataMes.(message.ResCancelOrder)
@@ -99,7 +99,7 @@ func ServerProcessMes(conn net.Conn) {
 			//将司机接单返回信息存进数据库
 			rdConn := redis.GetInstance()
 			defer rdConn.Close()
-			var cancelOrderKey = dialogOtherMes.OrderSn + "" + strconv.Itoa(CurUser.UserId)
+			var cancelOrderKey = dialogOtherMes.OrderSn + "" + strconv.Itoa(int(CurUser.Id))
 			redis.AddResultInfo(rdConn, message.ResCancelOrderStatus, cancelOrderKey, resMes.Data)
 		case message.DriverPushUserIsOrderMesType:
 			// 将数据转换成CurUserMes
@@ -109,7 +109,7 @@ func ServerProcessMes(conn net.Conn) {
 			}
 			//todo 将司机接单成功的消息推送给乘客
 			info := fmt.Sprintf("订单号为:\t%s\t接单成功;司机名称:[%s];司机ID为:[%d]",
-				dialogMes.OrderSn, dialogMes.DriverName, dialogMes.Driver.Id)
+				dialogMes.OrderSn, dialogMes.DriverName, dialogMes.Order.DriverId)
 			fmt.Println(info)
 		case message.DriverToUserMesType:
 			//todo 司机向用户发送消息

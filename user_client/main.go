@@ -13,7 +13,7 @@ func init() {
 }
 
 func main() {
-	var userId int
+	var UserAccount string
 	var userPwd string
 	var userName string
 	for {
@@ -29,24 +29,24 @@ func main() {
 		case 1:
 			fmt.Println("-----登录-----")
 			fmt.Println("请输入账号：")
-			fmt.Scanf("%d\n", &userId)
+			fmt.Scanf("%s\n", &UserAccount)
 			fmt.Println("请输入密码：")
 			fmt.Scanf("%s\n", &userPwd)
 			// 调用登录方法
-			err := Cprocess.NewCuserProcess().Login(userId, userPwd)
+			err := Cprocess.NewCuserProcess().Login(UserAccount, userPwd)
 			if err != nil {
 				fmt.Println("服务器未开启,请联系后台人员")
 			}
 		case 2:
 			fmt.Println("用户注册")
 			fmt.Println("请输入账号：")
-			fmt.Scanf("%d\n", &userId)
+			fmt.Scanf("%s\n", &UserAccount)
 			fmt.Println("请输入密码：")
 			fmt.Scanf("%s\n", &userPwd)
 			fmt.Println("请输入昵称：")
 			fmt.Scanf("%s\n", &userName)
 			//todo 调用乘客注册方法
-			err := Cprocess.NewCuserProcess().Register(userId, userPwd, userName)
+			err := Cprocess.NewCuserProcess().Register(UserAccount, userPwd, userName)
 			if err != nil {
 				fmt.Println("服务器未开启,请联系后台人员")
 			}

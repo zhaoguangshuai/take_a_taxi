@@ -15,16 +15,16 @@ func NewSonlineUserMgr() {
 
 // 对在线用户进行增删改查操作
 func (this *SonlineUerMgr) AddOnlineUser(sp *SuserProcess) {
-	SMUSER.OnlineUsers[sp.UserId] = sp
+	SMUSER.OnlineUsers[int(sp.Id)] = sp
 }
 func (this *SonlineUerMgr) DelOnlineUser(sp *SuserProcess) {
-	delete(SMUSER.OnlineUsers, sp.UserId)
+	delete(SMUSER.OnlineUsers, int(sp.Id))
 }
 func (this *SonlineUerMgr) ModifyOnlineUser(sp *SuserProcess) {
 	this.AddOnlineUser(sp)
 }
 func (this *SonlineUerMgr) SeletcOnlineUser(sp *SuserProcess) (value *SuserProcess, ok bool) {
-	value, ok = this.OnlineUsers[sp.UserId]
+	value, ok = this.OnlineUsers[int(sp.Id)]
 	return
 }
 func (this *SonlineUerMgr) GetAllOnlineUser() (users map[int]*SuserProcess) {

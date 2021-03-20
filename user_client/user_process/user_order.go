@@ -36,7 +36,7 @@ func (this *CuserOrder) CreateOrder() {
 	var orderMes message.DialogOrderInfoMes
 	//todo 将订单信息封装到orderMes中
 	orderMes.User = CurUser
-	orderMes.Order.UserId = CurUser.UserId
+	orderMes.Order.UserId = CurUser.Id
 	orderMes.StartAddress = startAddress
 	orderMes.EndAddress = endAddress
 
@@ -59,7 +59,7 @@ func (this *CuserOrder) CreateOrder() {
 	time.Sleep(1 * time.Second)
 	rdConn := redis.GetInstance()
 	defer rdConn.Close()
-	data, ok := redis.SelectResultInfo(rdConn, message.ResCreateOrderStatus, strconv.Itoa(CurUser.UserId))
+	data, ok := redis.SelectResultInfo(rdConn, message.ResCreateOrderStatus, strconv.Itoa(int(CurUser.Id)))
 	if !ok {
 		fmt.Println("从数据库获取创建订单同步返回信息失败")
 		return
@@ -82,7 +82,7 @@ func (this *CuserOrder) CreateOrder() {
 			fmt.Println(" 2 退出登录")
 			cp := NewCuserProcess()
 			cp.Conn = Csms.Conn
-			cp.ExitLogin(CurUser.UserId)
+			cp.ExitLogin(int(CurUser.Id))
 			os.Exit(0)
 		case 3:
 			Csms.SendDialogToAnother()
@@ -105,7 +105,7 @@ func (this *CuserOrder) CancelOrder() {
 
 	var cancelOrderInfo message.CancelOrder
 	cancelOrderInfo.OrderSn = order_sn
-	cancelOrderInfo.UserId = CurUser.UserId
+	cancelOrderInfo.UserId = CurUser.Id
 
 	// 创建Transfer实例
 	tf := util.NewTransfer(this.Conn)
@@ -126,7 +126,7 @@ func (this *CuserOrder) CancelOrder() {
 	time.Sleep(1 * time.Second)
 	rdConn := redis.GetInstance()
 	defer rdConn.Close()
-	var status_key = order_sn + "" + strconv.Itoa(CurUser.UserId)
+	var status_key = order_sn + "" + strconv.Itoa(int(CurUser.Id))
 	data, ok := redis.SelectResultInfo(rdConn, message.ResCancelOrderStatus, status_key)
 	if !ok {
 		fmt.Println("从数据库获取取消订单同步返回信息失败")
