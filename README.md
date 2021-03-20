@@ -33,8 +33,10 @@ go run trail_didi_3/user_client/main.go(启动乘客端，开始下单)<br>
 </ol>
 
 ### 目录结构
+* bootstrap(`项目引导文件`)
 * config(`相关配置信息初始化目录`)
 * driver_client(`司机客户端`)
+* models(`模型迁移文件`)
 * pkg(`手动编写的包服务`)
 * server(`服务端`)
 * user_client(`乘客客户端`)
