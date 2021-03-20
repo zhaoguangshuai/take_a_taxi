@@ -1,10 +1,13 @@
 package Sprocess
 
 import (
+	"fmt"
 	"net"
+	"trail_didi_3/models/chat_message"
 	"trail_didi_3/models/order"
 	"trail_didi_3/models/user"
 	"trail_didi_3/pkg/message"
+	"trail_didi_3/pkg/orm"
 	"trail_didi_3/pkg/util"
 )
 
@@ -37,6 +40,7 @@ func (this *SSmsProcess) SendMesToAnother(smsMes message.Message) {
 	}
 	//todo 获取司机（接受信息者）的连接数据
 	sp, ok := SMDRIVER.OnlineDrivers[int(dialogOtherUserMes.OtherDriverId)]
+	fmt.Println("乘客发送的消息信息", dialogOtherUserMes)
 	if !ok {
 		return
 	}
@@ -56,6 +60,12 @@ func (this *SSmsProcess) SendMesToAnother(smsMes message.Message) {
 	if err != nil {
 		return
 	}
+	//todo 将发送的消息存储到数据库
+	ChatMessage := chat_message.ChatMessage{}
+	ChatMessage.DriveId = dialogOtherUserMes.OtherDriverId
+	ChatMessage.UserId = dialogOtherUserMes.User.Id
+	ChatMessage.Content = dialogOtherUserMes.Dialog
+	orm.GetInstance().Create(&ChatMessage)
 }
 
 /*

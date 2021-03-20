@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"trail_didi_3/models/chat_message"
 	"trail_didi_3/models/driver"
 	"trail_didi_3/models/order"
 	"trail_didi_3/models/user"
@@ -16,6 +17,7 @@ func init()  {
 	MigrateStruct["driver"] = driver.Driver{}
 	MigrateStruct["user"] = user.User{}
 	MigrateStruct["order"] = order.Order{}
+	MigrateStruct["chat_message"] = chat_message.ChatMessage{}
 
 }
 

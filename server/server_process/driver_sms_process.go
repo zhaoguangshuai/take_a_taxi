@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"trail_didi_3/models/chat_message"
 	"trail_didi_3/models/driver"
 	"trail_didi_3/models/order"
 	"trail_didi_3/pkg/message"
@@ -146,4 +147,10 @@ func (this *SdriverSmsProcess) SendMesToAnother(smsMes message.Message) {
 	if err != nil {
 		return
 	}
+	//todo 将发送的消息存储到数据库
+	ChatMessage := chat_message.ChatMessage{}
+	ChatMessage.DriveId = dialogOtherUserMes.Driver.Id
+	ChatMessage.UserId = dialogOtherUserMes.OtherUserId
+	ChatMessage.Content = dialogOtherUserMes.Dialog
+	orm.GetInstance().Create(&ChatMessage)
 }
